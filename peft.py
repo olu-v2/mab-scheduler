@@ -1,6 +1,6 @@
 from typing import List, Dict
 from custom_types import Task, VM
-from utils import _reset_vms
+from utils import _reset_vms, _proxy_exec_time
 
 def peft(tasks: List[Task], vms: List[VM]) -> Dict:
     """
@@ -10,22 +10,24 @@ def peft(tasks: List[Task], vms: List[VM]) -> Dict:
     tasks by their OCT-based rank.
     """
     vms_copy = _reset_vms(vms)
-    schedule = {}
+    assignment = {}
 
-    # OCT rank: average best finish time across VMs
     oct_rank = {}
     for task in tasks:
-        best_times = [task.length / vm.mips for vm in vms_copy]
+        best_times = [_proxy_exec_time(task, vm) for vm in vms_copy]
         oct_rank[task.id] = sum(best_times) / len(best_times)
 
     sorted_tasks = sorted(tasks, key=lambda t: oct_rank[t.id], reverse=True)
     for task in sorted_tasks:
-        best_vm, best_start, best_finish = None, 0, float('inf')
+        best_vm, best_finish = None, float('inf')
         for vm in vms_copy:
-            start  = max(vm.available_at, task.submit_time)
-            finish = start + task.length / vm.mips
+            if task.num_pes > vm.num_pes:
+                    continue
+            start = max(vm.available_at, task.submit_time)
+            finish = start + _proxy_exec_time(task, vm)
             if finish < best_finish:
-                best_vm, best_start, best_finish = vm, start, finish
-        schedule[task.id] = (best_vm.id, best_start, best_finish)
+                best_vm, best_finish = vm, finish
+        assignment[task.id] = best_vm.id
         best_vm.available_at = best_finish
-    return schedule
+
+    return assignment

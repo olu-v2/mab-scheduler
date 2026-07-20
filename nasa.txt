@@ -1,0 +1,134 @@
+Loading SWF trace: NASA-iPSC-1993-3.1-cln.swf
+Max task length: 34345000.0 | Max num_pes: 16
+Loaded 3000 valid tasks.
+Workload CoV: 3.2909
+Adaptive Mode: EXPLORATION-HEAVY (Volatile Workload)
+Active Parameters -> ucb_c: 0.4 | rank_bonus: 0.1
+--------------------
+
+Running simulation: 3000 tasks | batch_size=150 | rounds=20 | n_vms=4
+MAB: DiscountedUCBMAB | Heuristics: ['heft', 'peft', 'min_min', 'max_min', 'round_robin', 'hghhc', 'sufferage', 'heft_duplication', 'simulated_annealing']
+
+  Round    1/20 | Heuristic: heft               | Makespan:   52912.23 | Reward: 1.1000
+  Round    3/20 | Heuristic: min_min            | Makespan:   39877.12 | Reward: 1.1000
+  Round    5/20 | Heuristic: round_robin        | Makespan:   80019.22 | Reward: 0.7483
+  Round    7/20 | Heuristic: sufferage          | Makespan: 15396101.53 | Reward: 0.0000
+  Round    9/20 | Heuristic: simulated_annealing | Makespan: 15382555.62 | Reward: 0.0000
+  Round   11/20 | Heuristic: min_min            | Makespan:  101009.36 | Reward: 0.8250
+  Round   13/20 | Heuristic: heft_duplication   | Makespan:   34177.14 | Reward: 1.1000
+  Round   15/20 | Heuristic: hghhc              | Makespan:   19052.83 | Reward: 1.1000
+  Round   17/20 | Heuristic: min_min            | Makespan:   24326.35 | Reward: 0.9308
+  Round   19/20 | Heuristic: hghhc              | Makespan:   89720.22 | Reward: 0.3280
+  Round   20/20 | Heuristic: min_min            | Makespan:  159062.91 | Reward: 0.5780
+
+Running baselines...
+
+============================================================
+RESULTS SUMMARY
+============================================================
+
+[MAB-DISCOUNTED_UCB]
+  label: MAB-DISCOUNTED_UCB
+  rounds: 20
+  avg_makespan: 1611808.5
+  avg_reward: 0.6628
+  avg_utilization: 0.0458
+  avg_cost: 404.922113
+  avg_carbon: 3.08929962
+  heuristic_counts: {'heft': 2, 'peft': 1, 'min_min': 4, 'max_min': 3, 'round_robin': 2, 'hghhc': 3, 'sufferage': 1, 'heft_duplication': 3, 'simulated_annealing': 1}
+
+[Baseline: heft]
+  label: heft
+  rounds: 20
+  avg_makespan: 843569.31
+  avg_reward: -0.0002
+  avg_utilization: 0.0206
+  avg_cost: 211.923357
+  avg_carbon: 1.61684118
+  heuristic_counts: {'heft': 20}
+
+[Baseline: peft]
+  label: peft
+  rounds: 20
+  avg_makespan: 843569.31
+  avg_reward: 0.0181
+  avg_utilization: 0.0209
+  avg_cost: 211.923357
+  avg_carbon: 1.61684118
+  heuristic_counts: {'peft': 20}
+
+[Baseline: min_min]
+  label: min_min
+  rounds: 20
+  avg_makespan: 6214032.36
+  avg_reward: -0.3452
+  avg_utilization: 0.1622
+  avg_cost: 1561.103018
+  avg_carbon: 11.91022869
+  heuristic_counts: {'min_min': 20}
+
+[Baseline: max_min]
+  label: max_min
+  rounds: 20
+  avg_makespan: 843569.31
+  avg_reward: -0.0047
+  avg_utilization: 0.0206
+  avg_cost: 211.923357
+  avg_carbon: 1.61684118
+  heuristic_counts: {'max_min': 20}
+
+[Baseline: round_robin]
+  label: round_robin
+  rounds: 20
+  avg_makespan: 843569.3
+  avg_reward: 0.0
+  avg_utilization: 0.0206
+  avg_cost: 211.923355
+  avg_carbon: 1.61684117
+  heuristic_counts: {'round_robin': 20}
+
+[Baseline: hghhc]
+  label: hghhc
+  rounds: 20
+  avg_makespan: 75145.99
+  avg_reward: 0.1406
+  avg_utilization: 0.0038
+  avg_cost: 18.878342
+  avg_carbon: 0.14402981
+  heuristic_counts: {'hghhc': 20}
+
+[Baseline: sufferage]
+  label: sufferage
+  rounds: 20
+  avg_makespan: 843569.31
+  avg_reward: 0.0516
+  avg_utilization: 0.0258
+  avg_cost: 211.923357
+  avg_carbon: 1.61684118
+  heuristic_counts: {'sufferage': 20}
+
+[Baseline: heft_duplication]
+  label: heft_duplication
+  rounds: 20
+  avg_makespan: 6214032.36
+  avg_reward: -0.3452
+  avg_utilization: 0.1622
+  avg_cost: 1561.103018
+  avg_carbon: 11.91022869
+  heuristic_counts: {'heft_duplication': 20}
+
+[Baseline: simulated_annealing]
+  label: simulated_annealing
+  rounds: 20
+  avg_makespan: 6214032.36
+  avg_reward: -0.3452
+  avg_utilization: 0.1622
+  avg_cost: 1561.103018
+  avg_carbon: 11.91022869
+  heuristic_counts: {'simulated_annealing': 20}
+
+Total simulation time: 2.01s
+Final MAB Q-values: {'heft': 0.6190636971849156, 'peft': 0.11620801088897592, 'min_min': 0.8107893826817424, 'max_min': 0.711842958518517, 'round_robin': 0.7905436059718313, 'hghhc': 0.681969349943976, 'sufferage': 0.0, 'heft_duplication': 0.742140927298308, 'simulated_annealing': 0.0}
+Final selection counts: {'heft': 0.9760905417736857, 'peft': 0.3972143184582181, 'min_min': 2.905744744943786, 'max_min': 2.0060470999408273, 'round_robin': 1.1983831207847526, 'hghhc': 2.2114559166155296, 'sufferage': 0.5133420832795047, 'heft_duplication': 2.053203633756386, 'simulated_annealing': 0.5688000922764596}
+
+Results saved to output/nasa/ directory.

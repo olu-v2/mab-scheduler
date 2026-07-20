@@ -1,0 +1,134 @@
+Loading SWF trace: HPC2N-2002-2.2-cln.swf
+Max task length: 423090000.0 | Max num_pes: 16
+Loaded 3000 valid tasks.
+Workload CoV: 2.5175
+Adaptive Mode: EXPLORATION-HEAVY (Volatile Workload)
+Active Parameters -> ucb_c: 0.4 | rank_bonus: 0.1
+--------------------
+
+Running simulation: 3000 tasks | batch_size=150 | rounds=20 | n_vms=4
+MAB: DiscountedUCBMAB | Heuristics: ['heft', 'peft', 'min_min', 'max_min', 'round_robin', 'hghhc', 'sufferage', 'heft_duplication', 'simulated_annealing']
+
+  Round    1/20 | Heuristic: heft               | Makespan: 1310504423.44 | Reward: 0.0000
+  Round    3/20 | Heuristic: min_min            | Makespan: 493125811.37 | Reward: 0.0000
+  Round    5/20 | Heuristic: round_robin        | Makespan: 1346113048.51 | Reward: 0.0000
+  Round    7/20 | Heuristic: sufferage          | Makespan: 1901390285.75 | Reward: 0.0000
+  Round    9/20 | Heuristic: simulated_annealing | Makespan: 993466980.75 | Reward: 0.0000
+  Round   11/20 | Heuristic: hghhc              | Makespan:  160031.32 | Reward: 1.1000
+  Round   13/20 | Heuristic: hghhc              | Makespan:  755140.15 | Reward: 1.1000
+  Round   15/20 | Heuristic: hghhc              | Makespan:   95526.35 | Reward: 1.1000
+  Round   17/20 | Heuristic: hghhc              | Makespan:  103388.70 | Reward: 1.1000
+  Round   19/20 | Heuristic: hghhc              | Makespan:  167741.15 | Reward: 1.1000
+  Round   20/20 | Heuristic: hghhc              | Makespan: 15413735.55 | Reward: 1.1000
+
+Running baselines...
+
+============================================================
+RESULTS SUMMARY
+============================================================
+
+[MAB-DISCOUNTED_UCB]
+  label: MAB-DISCOUNTED_UCB
+  rounds: 20
+  avg_makespan: 422203053.87
+  avg_reward: 0.66
+  avg_utilization: 0.5915
+  avg_cost: 106066.789422
+  avg_carbon: 809.22251991
+  heuristic_counts: {'heft': 1, 'peft': 2, 'min_min': 1, 'max_min': 1, 'round_robin': 1, 'hghhc': 11, 'sufferage': 1, 'heft_duplication': 1, 'simulated_annealing': 1}
+
+[Baseline: heft]
+  label: heft
+  rounds: 20
+  avg_makespan: 651123841.58
+  avg_reward: -0.037
+  avg_utilization: 1.0
+  avg_cost: 163576.778424
+  avg_carbon: 1247.98736303
+  heuristic_counts: {'heft': 20}
+
+[Baseline: peft]
+  label: peft
+  rounds: 20
+  avg_makespan: 640599302.18
+  avg_reward: 0.032
+  avg_utilization: 0.9625
+  avg_cost: 160932.780249
+  avg_carbon: 1227.81532918
+  heuristic_counts: {'peft': 20}
+
+[Baseline: min_min]
+  label: min_min
+  rounds: 20
+  avg_makespan: 775252376.27
+  avg_reward: -0.308
+  avg_utilization: 1.0
+  avg_cost: 194760.624749
+  avg_carbon: 1485.90038784
+  heuristic_counts: {'min_min': 20}
+
+[Baseline: max_min]
+  label: max_min
+  rounds: 20
+  avg_makespan: 615357725.51
+  avg_reward: 0.0903
+  avg_utilization: 0.9688
+  avg_cost: 154591.535264
+  avg_carbon: 1179.43564056
+  heuristic_counts: {'max_min': 20}
+
+[Baseline: round_robin]
+  label: round_robin
+  rounds: 20
+  avg_makespan: 641669585.5
+  avg_reward: 0.0
+  avg_utilization: 0.975
+  avg_cost: 161201.659202
+  avg_carbon: 1229.86670554
+  heuristic_counts: {'round_robin': 20}
+
+[Baseline: hghhc]
+  label: hghhc
+  rounds: 20
+  avg_makespan: 6154288.32
+  avg_reward: 0.6741
+  avg_utilization: 0.352
+  avg_cost: 1546.093989
+  avg_carbon: 11.79571929
+  heuristic_counts: {'hghhc': 20}
+
+[Baseline: sufferage]
+  label: sufferage
+  rounds: 20
+  avg_makespan: 662895497.69
+  avg_reward: -0.0423
+  avg_utilization: 1.0
+  avg_cost: 166534.080032
+  avg_carbon: 1270.54970391
+  heuristic_counts: {'sufferage': 20}
+
+[Baseline: heft_duplication]
+  label: heft_duplication
+  rounds: 20
+  avg_makespan: 772995813.08
+  avg_reward: -0.3068
+  avg_utilization: 1.0
+  avg_cost: 194193.72593
+  avg_carbon: 1481.5753084
+  heuristic_counts: {'heft_duplication': 20}
+
+[Baseline: simulated_annealing]
+  label: simulated_annealing
+  rounds: 20
+  avg_makespan: 792590722.06
+  avg_reward: -0.3211
+  avg_utilization: 1.0
+  avg_cost: 199116.402509
+  avg_carbon: 1519.13221728
+  heuristic_counts: {'simulated_annealing': 20}
+
+Total simulation time: 2.29s
+Final MAB Q-values: {'heft': 0.0, 'peft': 0.4387119820648358, 'min_min': 0.0, 'max_min': 0.0, 'round_robin': 0.0, 'hghhc': 1.1, 'sufferage': 0.0, 'heft_duplication': 0.0, 'simulated_annealing': 0.0}
+Final selection counts: {'heft': 0.37735360253530714, 'peft': 0.9959512576965968, 'min_min': 0.41812033521917696, 'max_min': 0.44012666865176525, 'round_robin': 0.46329123015975293, 'hghhc': 8.512936194347951, 'sufferage': 0.5133420832795047, 'heft_duplication': 0.5403600876626365, 'simulated_annealing': 0.5688000922764596}
+
+Results saved to output/hpc2n/ directory.
