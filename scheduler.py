@@ -649,7 +649,7 @@ def main(swf_path: str = None,
         dataset_label = "synthetic"
         swf_path = None
 
-    output_dir = f"output/{dataset_label}"    
+    output_dir = f"output/{dataset_label}/{mab_type}"    
     os.makedirs(output_dir, exist_ok=True)
 
     if swf_path and os.path.exists(swf_path):
