@@ -378,8 +378,11 @@ class DiscountedUCBMAB:
 # Min-Max Scaled Beta Thompson Sampling
 # =====================================================================
 class ScaledThompsonSamplingMAB:
-    def __init__(self, arms: List[str], **kwargs):
+    def __init__(self, arms: List[str], n_arms: int = None, **kwargs):
         self.arms = arms
+        # Initialize self.n as a dictionary mapping arm string keys to selection counts
+        self.n: Dict[str, int] = {a: 0 for a in arms}
+        
         # Initialize alpha and beta prior weights
         self.alpha: Dict[str, float] = {a: 1.0 for a in arms}
         self.beta: Dict[str, float] = {a: 1.0 for a in arms}
@@ -410,6 +413,7 @@ class ScaledThompsonSamplingMAB:
         return max(samples, key=samples.get)
 
     def update(self, arm: str, reward: float):
+        self.n[arm] += 1
         self.total_pulls += 1
         
         # Update dynamic min and max rewards observed so far
@@ -495,12 +499,6 @@ def run_simulation(tasks: List[Task],
               f"Heuristics: {list(HEURISTICS.keys())}\n")
 
     for i in range(n_rounds):
-        if i == 50:
-        # Simulate sudden VM heterogeneity shift / speed drop on primary VMs
-            for vm in vms:
-                vm.mips = vm.mips * 0.1  # Reduce processing power by 90%
-            if verbose:
-                print("\n⚡ [WORKLOAD SHIFT] Round 50: Resource capacity drop injected!\n")
         batch = tasks[i * batch_size: (i + 1) * batch_size]
         if not batch:
             break

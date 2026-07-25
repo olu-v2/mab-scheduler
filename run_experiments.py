@@ -66,7 +66,7 @@ def main():
     # Load trace and VMs once to share across experiments
     tasks = load_swf(SWF_PATH, max_tasks=15000)
     vms = generate_vms(n_vms=N_VMS)
-    daemon = CloudSimDaemon(JAR_PATH) # Assuming daemon is started here
+    daemon = CloudSimDaemon(JAR_PATH)
 
     summary_rows = []
 
