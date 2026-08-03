@@ -1,5 +1,6 @@
-from dataclasses import dataclass, field
-from typing import List, Dict, Optional, Tuple
+from dataclasses import dataclass
+from typing import Optional
+
 
 @dataclass
 class Task:
@@ -17,13 +18,3 @@ class VM:
     cost_per_second: float
     carbon_per_second: float
     available_at: float = 0.0
-
-@dataclass
-class ScheduleResult:
-    heuristic: str
-    makespan: float
-    total_cost: float
-    total_carbon: float
-    utilization: float
-    reward: float
-    schedule: Dict       # task_id -> (vm_id, start, finish)

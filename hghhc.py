@@ -22,7 +22,6 @@ import math
 import random
 from dataclasses import dataclass
 from typing import List, Dict
-from custom_types import Task, VM
 
 @dataclass
 class Task:
@@ -38,11 +37,16 @@ class VM:
     num_pes: int = 1
 
 def build_etc(tasks: List[Task], vms: List[VM]) -> List[List[float]]:
-    """
-    ETC[i][j] = Tlen_i / MIPS_j   (Eq. 2)
-    Returns an n_tasks × n_vms matrix.
-    """
-    return [[t.length / v.mips for v in vms] for t in tasks]
+    etc = []
+    for t in tasks:
+        row = []
+        for v in vms:
+            pes_available = max(1, v.num_pes)
+            pes_needed = max(1, t.num_pes)
+            parallel_efficiency = min(1.0, pes_available / pes_needed)
+            row.append((t.length / v.mips) / parallel_efficiency)
+        etc.append(row)
+    return etc
 
 
 # =============================================================================
@@ -91,15 +95,8 @@ def fitness(assignment: List[int],
 # 4.  POPULATION INITIALISATION  (Eq. 6)
 # =============================================================================
 
-def init_population(n_pop: int, n_tasks: int, n_vms: int) -> List[List[int]]:
-    """
-    Xi[j] = floor( LB + rand * (UB - LB) )  ∈ {0, …, n_vms-1}   (Eq. 6)
-    LB = 0, UB = n_vms - 1  (0-indexed equivalent of paper's 1-based {1…vm})
-    """
-    return [
-        [random.randint(0, n_vms - 1) for _ in range(n_tasks)]
-        for _ in range(n_pop)
-    ]
+def init_population(n_pop, n_tasks, n_vms, rng) -> List[List[int]]:
+    return [[rng.randint(0, n_vms - 1) for _ in range(n_tasks)] for _ in range(n_pop)]
 
 
 # =============================================================================
@@ -120,16 +117,10 @@ def init_population(n_pop: int, n_tasks: int, n_vms: int) -> List[List[int]]:
 # After the continuous update the position is clipped and discretised.
 # =============================================================================
 
-def hgso_update(xi: List[int], x_best: List[int],
-                n_vms: int) -> List[int]:
-    """
-    HGSO exploration step.
-    Moves xi toward x_best with random Henry-gas perturbation.
-    """
-    K    = random.random()
-    H_cp = random.gauss(0, 1) * 0.1
-    C    = random.gauss(0, 1) * 0.1
-
+def hgso_update(xi, x_best, n_vms, rng) -> List[int]:
+    K = rng.random()
+    H_cp = rng.gauss(0, 1) * 0.1
+    C = rng.gauss(0, 1) * 0.1
     new = []
     for j in range(len(xi)):
         val = xi[j] + K * H_cp * C * (x_best[j] - xi[j])
@@ -153,85 +144,45 @@ def hgso_update(xi: List[int], x_best: List[int],
 #   Strategy 4  (q < 0.5, |E| < 0.5)  : hard besiege + rapid Lévy dive
 # =============================================================================
 
-def _levy_flight(n: int, beta: float = 1.5) -> List[float]:
-    """Lévy flight step vector using Mantegna's algorithm."""
-    sigma = (
-        math.gamma(1 + beta) * math.sin(math.pi * beta / 2) /
-        (math.gamma((1 + beta) / 2) * beta * 2 ** ((beta - 1) / 2))
-    ) ** (1 / beta)
-    u = [random.gauss(0, sigma) for _ in range(n)]
-    v = [random.gauss(0, 1)     for _ in range(n)]
-    return [ui / (abs(vi) ** (1 / beta)) for ui, vi in zip(u, v)]
+def _levy_flight(n, rng, beta=1.5) -> List[float]:
+    sigma = (math.gamma(1+beta)*math.sin(math.pi*beta/2) / (math.gamma((1+beta)/2)*beta*2**((beta-1)/2)))**(1/beta)
+    u = [rng.gauss(0, sigma) for _ in range(n)]
+    v = [rng.gauss(0, 1) for _ in range(n)]
+    return [ui/(abs(vi)**(1/beta)) for ui, vi in zip(u, v)]
 
 
-def hho_update(xi: List[int], x_best: List[int],
-               population: List[List[int]],
-               t: int, max_iter: int,
-               n_vms: int) -> List[int]:
-    """
-    Full HHO update step (all 4 strategies).
-    Returns the updated integer assignment vector.
-    """
+def hho_update(xi, x_best, population, t, max_iter, n_vms, rng) -> List[int]:
     n = len(xi)
-    E0 = 2.0 * random.random() - 1.0          # initial energy ∈ [-1, 1]
-    E  = 2.0 * E0 * (1.0 - t / max_iter)      # escape energy (decreases)
-    J  = 2.0 * (1.0 - random.random())         # jump strength
-
-    def clip(v):
-        return int(abs(round(v))) % n_vms
-
+    E0 = 2.0 * rng.random() - 1.0
+    E = 2.0 * E0 * (1.0 - t/max_iter)
+    J = 2.0 * (1.0 - rng.random())
+    def clip(v): return int(abs(round(v))) % n_vms
     if abs(E) >= 1.0:
-        # ---- EXPLORATION ------------------------------------------------
-        q = random.random()
+        q = rng.random()
         if q >= 0.5:
-            # Random perch: jump to a random member of the population
-            r_hawk = random.choice(population)
-            new = [clip(r_hawk[j] - random.random() *
-                        abs(r_hawk[j] - 2 * random.random() * xi[j]))
-                   for j in range(n)]
+            r_hawk = rng.choice(population)
+            new = [clip(r_hawk[j] - rng.random()*abs(r_hawk[j] - 2*rng.random()*xi[j])) for j in range(n)]
         else:
-            # Rabbit energy: track average population + random offset
-            avg = [sum(p[j] for p in population) / len(population)
-                   for j in range(n)]
-            x_rand = [random.randint(0, n_vms - 1) for _ in range(n)]
-            new = [clip(x_rand[j] - random.random() *
-                        abs(x_rand[j] - avg[j]))
-                   for j in range(n)]
-
+            avg = [sum(p[j] for p in population)/len(population) for j in range(n)]
+            x_rand = [rng.randint(0, n_vms-1) for _ in range(n)]
+            new = [clip(x_rand[j] - rng.random()*abs(x_rand[j]-avg[j])) for j in range(n)]
     else:
-        # ---- EXPLOITATION -----------------------------------------------
-        q = random.random()
-
+        q = rng.random()
         if q >= 0.5 and abs(E) >= 0.5:
-            # Strategy 1 — Soft besiege
-            delta = [x_best[j] - xi[j] for j in range(n)]
-            new = [clip(x_best[j] - E * abs(J * x_best[j] - xi[j]))
-                   for j in range(n)]
-
+            new = [clip(x_best[j] - E*abs(J*x_best[j]-xi[j])) for j in range(n)]
         elif q >= 0.5 and abs(E) < 0.5:
-            # Strategy 2 — Hard besiege
-            new = [clip(x_best[j] - E * abs(x_best[j] - xi[j]))
-                   for j in range(n)]
-
+            new = [clip(x_best[j] - E*abs(x_best[j]-xi[j])) for j in range(n)]
         elif q < 0.5 and abs(E) >= 0.5:
-            # Strategy 3 — Soft besiege + Lévy rapid dive
-            levy = _levy_flight(n)
-            Y = [clip(x_best[j] - E * abs(J * x_best[j] - xi[j]))
-                 for j in range(n)]
-            Z = [clip(Y[j] + levy[j]) for j in range(n)]
-            # Pick whichever candidate is closer to best
-            new = Y if sum(abs(Y[j] - x_best[j]) for j in range(n))                      < sum(abs(Z[j] - x_best[j]) for j in range(n))                   else Z
-
+            levy = _levy_flight(n, rng)
+            Y = [clip(x_best[j] - E*abs(J*x_best[j]-xi[j])) for j in range(n)]
+            Z = [clip(Y[j]+levy[j]) for j in range(n)]
+            new = Y if sum(abs(Y[j]-x_best[j]) for j in range(n)) < sum(abs(Z[j]-x_best[j]) for j in range(n)) else Z
         else:
-            # Strategy 4 — Hard besiege + Lévy rapid dive
-            avg = [sum(p[j] for p in population) / len(population)
-                   for j in range(n)]
-            levy = _levy_flight(n)
-            Y = [clip(x_best[j] - E * abs(J * x_best[j] - avg[j]))
-                 for j in range(n)]
-            Z = [clip(Y[j] + levy[j]) for j in range(n)]
-            new = Y if sum(abs(Y[j] - x_best[j]) for j in range(n))                      < sum(abs(Z[j] - x_best[j]) for j in range(n))                   else Z
-
+            avg = [sum(p[j] for p in population)/len(population) for j in range(n)]
+            levy = _levy_flight(n, rng)
+            Y = [clip(x_best[j] - E*abs(J*x_best[j]-avg[j])) for j in range(n)]
+            Z = [clip(Y[j]+levy[j]) for j in range(n)]
+            new = Y if sum(abs(Y[j]-x_best[j]) for j in range(n)) < sum(abs(Z[j]-x_best[j]) for j in range(n)) else Z
     return new
 
 
@@ -273,16 +224,12 @@ def compute_probabilities(fit_vals: List[float]) -> List[float]:
     return [s / total for s in shifted]
 
 
-def random_rpr(lpr: float = 0.0, upr: float = 1.0) -> float:
-    """rpr = Lpr + rand * (Upr - Lpr)   (Eq. 9)"""
-    return lpr + random.random() * (upr - lpr)
+def random_rpr(rng, lpr=0.0, upr=1.0) -> float:
+    return lpr + rng.random() * (upr - lpr)
 
-
-def count_worst(n_pop: int, c1: float = 0.1, c2: float = 0.2) -> int:
-    """Nw = N * r * (c2 - c1) + c1   (Eq. 10)"""
-    r  = random.random()
-    nw = int(n_pop * (r * (c2 - c1) + c1))
-    return max(1, nw)
+def count_worst(n_pop, rng, c1=0.1, c2=0.2) -> int:
+    r = rng.random()
+    return max(1, int(n_pop * (r*(c2-c1) + c1)))
 
 
 # =============================================================================
@@ -319,7 +266,8 @@ def hghhc(tasks: List[Task],
     info     : dict  {'best_fitness', 'best_makespan', 'best_utilisation',
                       'convergence'}
     """
-    random.seed(seed)
+
+    rng = random.Random(seed)
 
     n_tasks = len(tasks)
     n_vms   = len(vms)
@@ -329,7 +277,7 @@ def hghhc(tasks: List[Task],
     etc = build_etc(tasks, vms)
 
     # ---- Stage 1: Initialise population (Eq. 6) -----------------------------
-    pop      = init_population(n_pop, n_tasks, n_vms)
+    pop      = init_population(n_pop, n_tasks, n_vms, rng)
     fit_vals = [fitness(p, etc, alpha) for p in pop]
 
     best_idx  = fit_vals.index(min(fit_vals))
@@ -346,14 +294,14 @@ def hghhc(tasks: List[Task],
 
         new_pop = []
         for i in range(n_pop):
-            rpr = random_rpr(lpr, upr)   # Eq. 9
+            rpr = random_rpr(rng, lpr, upr)   # Eq. 9
 
             if probs[i] >= rpr:
                 # HHO exploitation (Eq. 8 — left branch)
-                new_xi = hho_update(pop[i], x_best, pop, t, max_iter, n_vms)
+                new_xi = hho_update(pop[i], x_best, pop, t, max_iter, n_vms, rng)
             else:
                 # HGSO exploration (Eq. 8 — right branch)
-                new_xi = hgso_update(pop[i], x_best, n_vms)
+                new_xi = hgso_update(pop[i], x_best, n_vms, rng)
 
             # Accept if improved
             new_fit = fitness(new_xi, etc, alpha)
@@ -366,7 +314,7 @@ def hghhc(tasks: List[Task],
         pop = new_pop
 
         # Stage 3: COBL on worst Nw solutions (Eq. 10)
-        nw         = count_worst(n_pop)
+        nw         = count_worst(n_pop, rng)
         sorted_idx = sorted(range(n_pop), key=lambda i: fit_vals[i],
                             reverse=True)   # worst = highest fitness
         for idx in sorted_idx[:nw]:
@@ -408,24 +356,18 @@ def hghhc(tasks: List[Task],
     return schedule, info
 
 
-def _decode(assignment: List[int],
-            tasks: List[Task], vms: List[VM]) -> Dict:
-    """
-    Convert integer assignment vector → schedule dict.
-    schedule[task_id] = (vm_id, start_time, finish_time)
-    Uses sequential ordering within each VM (non-preemptive, Sec. V).
-    """
+def _decode(assignment, tasks, vms):
     vm_available = {v.id: 0.0 for v in vms}
     schedule = {}
-
     for k, task in enumerate(tasks):
-        vm_id  = vms[assignment[k]].id
-        vm     = vms[assignment[k]]
-        start  = max(vm_available[vm_id], task.submit_time)
-        finish = start + task.length / vm.mips
-        schedule[task.id] = (vm_id, round(start, 4), round(finish, 4))
-        vm_available[vm_id] = finish
-
+        vm = vms[assignment[k]]
+        pes_available = max(1, vm.num_pes)
+        pes_needed = max(1, task.num_pes)
+        parallel_efficiency = min(1.0, pes_available / pes_needed)
+        start = max(vm_available[vm.id], task.submit_time)
+        finish = start + (task.length / vm.mips) / parallel_efficiency
+        schedule[task.id] = (vm.id, round(start, 4), round(finish, 4))
+        vm_available[vm.id] = finish
     return schedule
 
 

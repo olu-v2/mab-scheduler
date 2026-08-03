@@ -1,6 +1,6 @@
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict
 from custom_types import Task, VM
-from utils import _reset_vms
+from utils import _reset_vms, _proxy_exec_time
 
 def max_min(tasks: List[Task], vms: List[VM]) -> Dict:
     """
@@ -8,28 +8,28 @@ def max_min(tasks: List[Task], vms: List[VM]) -> Dict:
     Balances workload by filling slower paths first.
     """
     vms_copy = _reset_vms(vms)
-    schedule = {}
+    assignment = {}
     remaining = list(tasks)
 
     while remaining:
-        # For each task find its minimum finish time
         task_min = {}
-        task_vm  = {}
+        task_vm = {}
         for task in remaining:
-            best_vm, best_start, best_finish = None, 0, float('inf')
+            best_vm, best_finish = None, float('inf')
             for vm in vms_copy:
-                start  = max(vm.available_at, task.submit_time)
-                finish = start + task.length / vm.mips
+                if task.num_pes > vm.num_pes:
+                    continue
+                start = max(vm.available_at, task.submit_time)
+                finish = start + _proxy_exec_time(task, vm)
                 if finish < best_finish:
-                    best_vm, best_start, best_finish = vm, start, finish
+                    best_vm, best_finish = vm, finish
             task_min[task.id] = best_finish
-            task_vm[task.id]  = (best_vm, best_start, best_finish)
+            task_vm[task.id] = (best_vm, best_finish)
 
-        # Pick task with maximum of its minimum finish times
         chosen = max(remaining, key=lambda t: task_min[t.id])
-        vm, start, finish = task_vm[chosen.id]
-        schedule[chosen.id] = (vm.id, start, finish)
+        vm, finish = task_vm[chosen.id]
+        assignment[chosen.id] = vm.id
         vm.available_at = finish
         remaining.remove(chosen)
 
-    return schedule
+    return assignment
